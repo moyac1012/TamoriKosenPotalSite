@@ -1,5 +1,5 @@
 async function loadSlides(){
-    const res = await fetch('slides.json');   // ルートから読み込む
+    const res = await fetch('./slides.json');   // ルートから読み込む
     const slides = await res.json();
     const ac = document.getElementById('logicAccordion');
     ac.innerHTML = '';
@@ -21,7 +21,7 @@ async function loadSlides(){
               ${
                 s.iframe
                 ? `<div class="ratio ratio-16x9 embedded-slide">
-                     <iframe src="${s.iframe}" title="Slide Week ${s.week}" allowfullscreen></iframe>
+                     <iframe src="${s.iframe}" title="Slide Week ${s.week}" allowfullscreen loading="lazy"></iframe>
                    </div>`
                 : `<p>スライドは準備中です。公開までお待ちください。</p>`
               }
