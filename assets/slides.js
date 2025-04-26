@@ -1,5 +1,5 @@
 async function loadSlides(){
-    const res = await fetch('../slides.json');   // ルートから読み込む
+    const res = await fetch('slides.json');   // ルートから読み込む
     const slides = await res.json();
     const ac = document.getElementById('logicAccordion');
     ac.innerHTML = '';
