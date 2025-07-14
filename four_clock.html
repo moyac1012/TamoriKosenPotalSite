@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>4進カウンタシミュレーター</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      margin-top: 50px;
+      background-color: white;
+      display: inline-block;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .display {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .button-row button {
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>4進カウンタシミュレーター</h1>
+    <div class="display">
+      <p>現在の値: <span id="count">0</span></p>
+      <p>2進数: <span id="binary">00</span></p>
+    </div>
+    <div class="button-row">
+      <button onclick="toggleX()">X: <span id="x-value">0</span></button>
+      <button onclick="reset()">リセット</button>
+    </div>
+  </div>
+  <canvas id="chart" width="800" height="200" style="margin-top: 20px;"></canvas>
+  <script>
+let count = 0;
+let clock = 0;
+let X = 0;
+let Q1 = 0, Q2 = 0;
+let Z = 0;
+let time = 0;
+let prevClock = 0;
+const history = [];
+const maxPoints = 50;
+for (let i = 0; i < maxPoints; i++) {
+  history.push({ time: i, clock: 0, X: 0, Q1: 0, Q2: 0, Z: 0 });
+}
+
+function updateDisplay() {
+  document.getElementById('count').textContent = (Q1 << 1) | Q2;
+  document.getElementById('binary').textContent = ((Q1 << 1) | Q2).toString(2).padStart(2, '0');
+  document.getElementById('x-value').textContent = X;
+}
+
+function toggleX() {
+  X = X ? 0 : 1;
+  updateDisplay();
+}
+
+function reset() {
+  count = 0;
+  Q1 = 0;
+  Q2 = 0;
+  Z = 0;
+  time = 0;
+  history.length = 0;
+  for (let i = 0; i < maxPoints; i++) {
+    history.push({ time: i, clock: 0, X: 0, Q1: 0, Q2: 0, Z: 0 });
+  }
+  drawChart();
+  updateDisplay();
+}
+
+function tickClock() {
+  clock ^= 1;
+  if (prevClock === 0 && clock === 1) {
+    if (X === 1) {
+      if (clock === 1 && X === 1 && Q1 === 1 && Q2 === 1) {
+        Q1 = 0;
+        Q2 = 0;
+        Z = 1;
+      } else {
+        let state = (Q1 << 1) | Q2;
+        state = (state + 1) % 4;
+        Q1 = (state >> 1) & 1;
+        Q2 = state & 1;
+        Z = 0;
+      }
+    }
+  }
+  prevClock = clock;
+  history.push({time, clock, X, Q1, Q2, Z});
+  if (history.length > maxPoints) history.shift();
+  time++;
+  drawChart();
+  updateDisplay();
+}
+
+function drawChart() {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const signals = ['clock', 'X', 'Q1', 'Q2', 'Z'];
+  const colors = ['black', 'red', 'blue', 'green', 'orange'];
+  const step = (canvas.width - 60) / maxPoints;
+  signals.forEach((sig, i) => {
+    ctx.fillText(sig, 5, 20 + i * 30);
+    ctx.beginPath();
+    ctx.moveTo(50, 20 + i * 30);
+    for (let j = 0; j < maxPoints; j++) {
+      const value = history[j][sig];
+      const y = 20 + i * 30;
+      const level = y - (value * 10);
+      const x = 50 + j * step;
+      ctx.lineTo(x, level);
+      ctx.lineTo(x + step, level);
+    }
+    ctx.strokeStyle = colors[i];
+    ctx.stroke();
+  });
+}
+
+updateDisplay();
+setInterval(tickClock, 500);
+</script>
+</body>
+</html>
